@@ -1,0 +1,21 @@
+# This is a generated file. Not intended for manual editing.
+services:
+  taskmanagementapi:
+    build:
+      context: "D:\\Code\\Learning\\TaskManagementApi"
+      dockerfile: "TaskManagementApi/Dockerfile"
+      target: "base"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/TaskManagementApi.dll"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
+    image: "taskmanagementapi:dev"
+    ports: []
+    volumes:
+    - "D:\\Code\\Learning\\TaskManagementApi\\TaskManagementApi:/app:rw"
+    - "D:\\Code\\Learning\\TaskManagementApi:/src:rw"
+    - "C:\\Users\\battu\\.nuget\\packages:/home/app/.nuget/packages"
+    working_dir: "/app"
