@@ -9,44 +9,26 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                echo "Checking out source code..."
                 checkout scm
             }
         }
 
-        stage('Restore Dependencies') {
+        stage('Build and Test Docker Compose') {
             steps {
-                sh 'dotnet restore'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'dotnet build --configuration Release'
-            }
-        }
-
-        stage('Run Unit Tests') {
-            steps {
-                sh 'dotnet test'
-            }
-        }
-
-        stage('Publish') {
-            steps {
-                sh 'dotnet publish --configuration Release --output ./publish'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                echo "Building and testing with Docker Compose..."
+                sh """
+                    docker-compose -f  build
+                    docker-compose -f  up --abort-on-container-exit --exit-code-from test
+                """
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                echo "Pushing Docker image to Docker Hub..."
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']) {
+                    sh "docker-compose -f  push"
                 }
             }
         }
@@ -54,6 +36,8 @@ pipeline {
 
     post {
         always {
+            echo "Cleaning up resources..."
+            sh "docker-compose -f docker-compose.yml down --volumes --remove-orphans"
             cleanWs()
         }
     }
