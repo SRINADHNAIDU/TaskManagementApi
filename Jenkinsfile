@@ -18,8 +18,8 @@ pipeline {
             steps {
                 echo "Building and testing with Docker Compose..."
                 sh """
-                    docker compose -f  build
-                    docker compose -f  up --abort-on-container-exit --exit-code-from test
+                    docker compose -f docker-compose.yml build
+                    docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from test
                 """
             }
         }
@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo "Pushing Docker image to Docker Hub..."
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']) {
-                    sh "docker compose -f  push"
+                    sh "docker compose -f docker-compose.yml push"
                 }
             }
         }
@@ -37,7 +37,7 @@ pipeline {
     post {
         always {
             echo "Cleaning up resources..."
-            sh "docker compose -f docker compose.yml down --volumes --remove-orphans"
+            sh "docker compose -f docker-compose.yml down --volumes --remove-orphans"
             cleanWs()
         }
     }
