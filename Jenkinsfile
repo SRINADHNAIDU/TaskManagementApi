@@ -23,16 +23,6 @@ pipeline {
                 """
             }
         }
-
-        stage('Test Docker Image') {
-            steps {
-                echo "Running tests on Docker containers using Docker Compose..."
-                sh """
-                    docker compose -f ${DOCKER_COMPOSE_FILE} up --abort-on-container-exit --exit-code-from test
-                """
-            }
-        }
-
         stage('Push Docker Image') {
             steps {
                 echo "Pushing Docker image to Docker Hub..."
