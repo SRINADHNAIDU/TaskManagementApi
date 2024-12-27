@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "srinadhnaidu/taskmanagementapi"
         DOCKER_TAG = "latest"
+        DOCKER_COMPOSE_FILE = "docker-compose.yml" // Ensure the file exists in your workspace
     }
 
     stages {
@@ -16,18 +17,18 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
+                echo "Building Docker image using Docker Compose..."
                 sh """
-                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    docker compose -f ${DOCKER_COMPOSE_FILE} build
                 """
             }
         }
 
         stage('Test Docker Image') {
             steps {
-                echo "Running tests on Docker image..."
+                echo "Running tests on Docker containers using Docker Compose..."
                 sh """
-                    docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} /path/to/test/command
+                    docker compose -f ${DOCKER_COMPOSE_FILE} up --abort-on-container-exit --exit-code-from test
                 """
             }
         }
@@ -37,7 +38,7 @@ pipeline {
                 echo "Pushing Docker image to Docker Hub..."
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']) {
                     sh """
-                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker compose -f ${DOCKER_COMPOSE_FILE} push
                     """
                 }
             }
@@ -46,9 +47,8 @@ pipeline {
 
     post {
         always {
-            echo "Cleaning up resources..."
-            sh "docker system prune -f"
-            cleanWs()
+            echo "Cleaning up Docker Compose resources..."
+            cleanWs() // Clean the workspace
         }
     }
 }
