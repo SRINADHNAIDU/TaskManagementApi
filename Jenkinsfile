@@ -14,12 +14,20 @@ pipeline {
             }
         }
 
-        stage('Build and Test Docker Compose') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building and testing with Docker Compose..."
+                echo "Building Docker image..."
                 sh """
-                    docker compose -f docker-compose.yml build
-                    docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from test
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                """
+            }
+        }
+
+        stage('Test Docker Image') {
+            steps {
+                echo "Running tests on Docker image..."
+                sh """
+                    docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} /path/to/test/command
                 """
             }
         }
@@ -28,7 +36,9 @@ pipeline {
             steps {
                 echo "Pushing Docker image to Docker Hub..."
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']) {
-                    sh "docker compose -f docker-compose.yml push"
+                    sh """
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
                 }
             }
         }
@@ -37,7 +47,7 @@ pipeline {
     post {
         always {
             echo "Cleaning up resources..."
-            sh "docker compose -f docker-compose.yml down --volumes --remove-orphans"
+            sh "docker system prune -f"
             cleanWs()
         }
     }
